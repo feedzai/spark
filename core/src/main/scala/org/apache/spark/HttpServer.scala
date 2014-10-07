@@ -24,7 +24,7 @@ import org.eclipse.jetty.security.authentication.DigestAuthenticator
 import org.eclipse.jetty.security.{ConstraintMapping, ConstraintSecurityHandler, HashLoginService}
 
 import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.server.bio.SocketConnector
+import org.eclipse.jetty.server.{Server, ServerConnector}
 import org.eclipse.jetty.server.handler.{DefaultHandler, HandlerList, ResourceHandler}
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 
@@ -48,7 +48,7 @@ private[spark] class HttpServer(
     serverName: String = "HTTP server")
   extends Logging {
 
-  private var server: Server = null
+  private var server: Server = _
   private var port: Int = requestedPort
 
   def start() {
@@ -70,16 +70,17 @@ private[spark] class HttpServer(
    * in the event of port collision. Return the bound server and the actual port used.
    */
   private def doStart(startPort: Int): (Server, Int) = {
-    val server = new Server()
-    val connector = new SocketConnector
-    connector.setMaxIdleTime(60 * 1000)
+    val threadPool = new QueuedThreadPool
+    threadPool.setDaemon(true)
+
+    val server = new Server(threadPool)
+    val connector = new ServerConnector(server)
+    connector.setIdleTimeout(60 * 1000)
+
     connector.setSoLingerTime(-1)
     connector.setPort(startPort)
     server.addConnector(connector)
 
-    val threadPool = new QueuedThreadPool
-    threadPool.setDaemon(true)
-    server.setThreadPool(threadPool)
     val resHandler = new ResourceHandler
     resHandler.setResourceBase(resourceBase.getAbsolutePath)
 
@@ -98,7 +99,7 @@ private[spark] class HttpServer(
     }
 
     server.start()
-    val actualPort = server.getConnectors()(0).getLocalPort
+    val actualPort = connector.getLocalPort
 
     (server, actualPort)
   }
