@@ -112,7 +112,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <akka.group>org.spark-project.akka</akka.group>
     <akka.version>2.3.4-spark</akka.version>
-    <java.version>1.6</java.version>
+    <java.version>1.8</java.version>
     <sbt.project.name>spark</sbt.project.name>
     <scala.macros.version>2.0.1</scala.macros.version>
     <mesos.version>0.18.1</mesos.version>
@@ -132,7 +132,7 @@
     <derby.version>10.10.1.1</derby.version>
     <parquet.version>1.6.0rc3</parquet.version>
     <jblas.version>1.2.3</jblas.version>
-    <jetty.version>8.1.14.v20131031</jetty.version>
+    <jetty.version>9.2.6.v20141205</jetty.version>
     <chill.version>0.5.0</chill.version>
     <codahale.metrics.version>3.0.0</codahale.metrics.version>
     <avro.version>1.7.6</avro.version>
@@ -995,6 +995,17 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <version>2.4</version>
+          <executions>
+            <execution>
+              <phase>package</phase>
+                <goals>
+                   <goal>jar</goal>
+                </goals>
+                <configuration>
+                  <classifier>jetty9</classifier>
+                </configuration>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1458,4 +1469,18 @@
     </profile>
 
   </profiles>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>snapshots</id>
+      <name>FeedZai internal snapshot repository</name>
+      <url>https://maven.feedzai.com/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>thirdparty</id>
+      <name>FeedZai third party release repository</name>
+      <url>https://maven.feedzai.com/content/repositories/thirdparty</url>
+    </repository>
+  </distributionManagement>
+
 </project>

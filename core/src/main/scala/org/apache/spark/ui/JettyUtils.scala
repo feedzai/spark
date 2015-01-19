@@ -24,7 +24,7 @@ import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import scala.language.implicitConversions
 import scala.xml.Node
 
-import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server.{NetworkConnector, Server}
 import org.eclipse.jetty.server.handler._
 import org.eclipse.jetty.servlet._
 import org.eclipse.jetty.util.thread.QueuedThreadPool
@@ -186,13 +186,14 @@ private[spark] object JettyUtils extends Logging {
     // Bind to the given port, or throw a java.net.BindException if the port is occupied
     def connect(currentPort: Int): (Server, Int) = {
       val server = new Server(new InetSocketAddress(hostName, currentPort))
-      val pool = new QueuedThreadPool
+      // Unfortunately Jetty 9 doesn't allow us to set both the thread pool and the port number in
+      // constructor. But fortunately the pool allocated by Jetty is always a QueuedThreadPool.
+      val pool = server.getThreadPool.asInstanceOf[QueuedThreadPool]
       pool.setDaemon(true)
-      server.setThreadPool(pool)
       server.setHandler(collection)
       try {
         server.start()
-        (server, server.getConnectors.head.getLocalPort)
+        (server, server.getConnectors.head.asInstanceOf[NetworkConnector].getLocalPort)
       } catch {
         case e: Exception =>
           server.stop()
